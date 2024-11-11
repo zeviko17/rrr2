@@ -12,22 +12,39 @@ document.addEventListener("DOMContentLoaded", function() {
             const data = JSON.parse(text.substr(47).slice(0, -2));
             
             data.table.rows.forEach((row, index) => {
-                const cell = row.c[1]; // עמודה B - שם הקבוצה
+                // שינוי: נקרא גם את שם הקבוצה (עמודה B) וגם את ה-ID (עמודה D)
+                const nameCell = row.c[1]; // עמודה B - שם הקבוצה
+                const idCell = row.c[3];   // עמודה D - ID של הקבוצה
                 let groupName = '';
+                let groupId = '';
 
-                if (cell) {
-                    if (cell.v !== null && cell.v !== undefined) {
-                        groupName = String(cell.v).trim();
-                    } else if (cell.f !== null && cell.f !== undefined) {
-                        groupName = String(cell.f).trim();
-                    } else if (cell.p !== null && cell.p !== undefined) {
-                        groupName = String(cell.p).trim();
+                // קריאת שם הקבוצה
+                if (nameCell) {
+                    if (nameCell.v !== null && nameCell.v !== undefined) {
+                        groupName = String(nameCell.v).trim();
+                    } else if (nameCell.f !== null && nameCell.f !== undefined) {
+                        groupName = String(nameCell.f).trim();
+                    } else if (nameCell.p !== null && nameCell.p !== undefined) {
+                        groupName = String(nameCell.p).trim();
                     }
                 }
 
-                console.log(`Row ${index + 1}: Group Name - ${groupName}`); // הוספת לוג להצגת שם קבוצה בכל שורה
-                if (groupName) {
-                    groups.push(groupName);
+                // קריאת ID הקבוצה
+                if (idCell) {
+                    if (idCell.v !== null && idCell.v !== undefined) {
+                        groupId = String(idCell.v).trim();
+                    } else if (idCell.f !== null && idCell.f !== undefined) {
+                        groupId = String(idCell.f).trim();
+                    } else if (idCell.p !== null && idCell.p !== undefined) {
+                        groupId = String(idCell.p).trim();
+                    }
+                }
+
+                if (groupName && groupId) {
+                    groups.push({
+                        name: groupName,
+                        id: groupId
+                    });
                 }
             });
 
@@ -42,18 +59,17 @@ document.addEventListener("DOMContentLoaded", function() {
         const groupList = document.getElementById("group-list");
         groupList.innerHTML = '';
 
-        groups.forEach(name => {
-            // יצירת תיבת סימון לכל קבוצה
+        groups.forEach(group => {
             const li = document.createElement('li');
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.className = 'group-checkbox';
-            checkbox.value = name;
-            checkbox.id = `group-${name}`;
+            checkbox.value = group.id; // שימוש ב-ID לשליחת ההודעה
+            checkbox.id = `group-${group.id}`;
 
             const label = document.createElement('label');
-            label.htmlFor = `group-${name}`;
-            label.textContent = ` ${name}`;
+            label.htmlFor = `group-${group.id}`;
+            label.textContent = ` ${group.name}`; // הצגת שם הקבוצה
 
             li.appendChild(checkbox);
             li.appendChild(label);
@@ -66,7 +82,6 @@ document.addEventListener("DOMContentLoaded", function() {
         checkboxes.forEach(checkbox => checkbox.checked = checked);
     }
 
-    // הוספת פונקציונליות לכפתור "בחר הכל/נקה הכל"
     const selectAllBtn = document.getElementById('select-all-btn');
     selectAllBtn.addEventListener('click', function() {
         if (selectAllBtn.textContent === 'בחר הכל') {
@@ -78,12 +93,11 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // פונקציונליות לכפתור השליחה
     const sendBtn = document.getElementById('send-btn');
     sendBtn.addEventListener('click', async function() {
         const selectedGroups = [];
         document.querySelectorAll('.group-checkbox:checked').forEach(checkbox => {
-            selectedGroups.push(checkbox.value);
+            selectedGroups.push(checkbox.value); // שימוש ב-ID של הקבוצה
         });
 
         const message = document.getElementById('message').value;
@@ -100,32 +114,29 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         // שליחת הודעה לקבוצות שנבחרו
-        for (let groupName of selectedGroups) {
+        for (let groupId of selectedGroups) {
             try {
                 if (files.length > 0) {
-                    // שליחה עם קובץ
-                    const file = files[0]; // נשלח רק את הקובץ הראשון כרגע
+                    const file = files[0];
                     const reader = new FileReader();
                     reader.onload = async function(e) {
                         const fileUrl = e.target.result;
-                        const response = await sendMessageWithImage(groupName, message, fileUrl);
+                        const response = await sendMessageWithImage(groupId, message, fileUrl);
                         console.log(response);
                     };
                     reader.readAsDataURL(file);
                 } else {
-                    // שליחה של טקסט בלבד
-                    const response = await sendTextMessage(groupName, message);
+                    const response = await sendTextMessage(groupId, message);
                     console.log(response);
                 }
             } catch (error) {
-                console.error('Error sending message to group:', groupName, error);
+                console.error('Error sending message to group:', groupId, error);
             }
         }
 
-        alert('ההודעה נשלחה לקבוצות שנבחרו (בפועל).');
+        alert('ההודעה נשלחה לקבוצות שנבחרו.');
     });
 
-    // פונקציות לשליחת הודעות באמצעות Green API
     async function sendTextMessage(chatId, messageText) {
         const sendMessageUrl = CONFIG.SEND_MESSAGE_URL;
 
