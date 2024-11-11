@@ -7,14 +7,81 @@
 </head>
 <body>
     <h1>שליחת הודעות ווצאפ לקבוצות</h1>
+    <button id="select-all-btn">בחר הכל</button>
     <ul id="group-list">
         <!-- כאן יוצגו שמות הקבוצות -->
     </ul>
 
-    <!-- כאן יתווספו רכיבי הממשק בשלב מאוחר יותר -->
+    <!-- כאן תתווסף תיבת טקסט להודעה וכפתור שליחה בהמשך -->
 
-    <script src="script.js"></script>
+    <script src="config.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("JavaScript file is connected successfully!");
+
+            let groups = {}; // משתנה לאחסון שמות קבוצות וה-IDs שלהן
+
+            async function loadGroups() {
+                const SHEET_URL = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:json&sheet=${CONFIG.SHEET_NAME}`;
+
+                try {
+                    const response = await fetch(SHEET_URL);
+                    const text = await response.text();
+                    const data = JSON.parse(text.substr(47).slice(0, -2));
+                    
+                    data.table.rows.forEach(row => {
+                        const groupName = row.c[1]?.v;  // עמודה B - שם הקבוצה
+                        const groupId = row.c[3]?.v;    // עמודה D - ID של הקבוצה
+                        if (groupName && groupId) {
+                            groups[groupName] = groupId;
+                        }
+                    });
+
+                    console.log('Groups loaded:', Object.keys(groups).length);
+                    displayGroups();
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                }
+            }
+
+            function displayGroups() {
+                const groupList = document.getElementById("group-list");
+                groupList.innerHTML = '';
+
+                Object.keys(groups).forEach(name => {
+                    // יצירת תיבת סימון לכל קבוצה
+                    const li = document.createElement('li');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'group-checkbox';
+                    checkbox.value = name;
+
+                    li.appendChild(checkbox);
+                    li.appendChild(document.createTextNode(` ${name} (ID: ${groups[name]})`));
+                    groupList.appendChild(li);
+                });
+            }
+
+            function toggleSelectAll(checked) {
+                const checkboxes = document.querySelectorAll('.group-checkbox');
+                checkboxes.forEach(checkbox => checkbox.checked = checked);
+            }
+
+            // הוספת פונקציונליות לכפתור "בחר הכל/נקה הכל"
+            const selectAllBtn = document.getElementById('select-all-btn');
+            selectAllBtn.addEventListener('click', function() {
+                if (selectAllBtn.textContent === 'בחר הכל') {
+                    toggleSelectAll(true);
+                    selectAllBtn.textContent = 'נקה הכל';
+                } else {
+                    toggleSelectAll(false);
+                    selectAllBtn.textContent = 'בחר הכל';
+                }
+            });
+
+            // טעינת הקבוצות בעת טעינת הדף
+            loadGroups();
+        });
+    </script>
 </body>
 </html>
-<script src="./config.js"></script>
-<script src="./script.js"></script>
