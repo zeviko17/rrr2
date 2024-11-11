@@ -56,7 +56,7 @@
         document.addEventListener("DOMContentLoaded", function() {
             console.log("JavaScript file is connected successfully!");
 
-            let groups = {}; // משתנה לאחסון שמות קבוצות וה-IDs שלהן
+            let groups = []; // משתנה לאחסון שמות הקבוצות
 
             async function loadGroups() {
                 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:json&sheet=${CONFIG.SHEET_NAME}`;
@@ -68,13 +68,12 @@
                     
                     data.table.rows.forEach(row => {
                         const groupName = row.c[1]?.v ? String(row.c[1].v).trim() : '';  // עמודה B - שם הקבוצה
-                        const groupId = row.c[3]?.v ? String(row.c[3].v).trim() : '';    // עמודה D - ID של הקבוצה
-                        if (groupName && groupId) {
-                            groups[groupName] = groupId;
+                        if (groupName) {
+                            groups.push(groupName);
                         }
                     });
 
-                    console.log('Groups loaded:', Object.keys(groups).length);
+                    console.log('Groups loaded:', groups.length);
                     displayGroups();
                 } catch (error) {
                     console.error('Error loading data:', error);
@@ -85,17 +84,17 @@
                 const groupList = document.getElementById("group-list");
                 groupList.innerHTML = '';
 
-                Object.keys(groups).forEach(name => {
+                groups.forEach(name => {
                     // יצירת תיבת סימון לכל קבוצה
                     const li = document.createElement('li');
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.className = 'group-checkbox';
                     checkbox.value = name;
-                    checkbox.id = `group-${groups[name]}`;
+                    checkbox.id = `group-${name}`;
 
                     const label = document.createElement('label');
-                    label.htmlFor = `group-${groups[name]}`;
+                    label.htmlFor = `group-${name}`;
                     label.textContent = ` ${name}`;
 
                     li.appendChild(checkbox);
@@ -126,7 +125,7 @@
             sendBtn.addEventListener('click', async function() {
                 const selectedGroups = [];
                 document.querySelectorAll('.group-checkbox:checked').forEach(checkbox => {
-                    selectedGroups.push(groups[checkbox.value]);
+                    selectedGroups.push(checkbox.value);
                 });
 
                 const message = document.getElementById('message').value;
@@ -143,25 +142,26 @@
                 }
 
                 // שליחת הודעה לקבוצות שנבחרו
-                for (let chatId of selectedGroups) {
+                for (let groupName of selectedGroups) {
                     try {
+                        const groupId = groups[groupName];
                         if (files.length > 0) {
                             // שליחה עם קובץ
                             const file = files[0]; // נשלח רק את הקובץ הראשון כרגע
                             const reader = new FileReader();
                             reader.onload = async function(e) {
                                 const fileUrl = e.target.result;
-                                const response = await sendMessageWithImage(chatId, message, fileUrl);
+                                const response = await sendMessageWithImage(groupId, message, fileUrl);
                                 console.log(response);
                             };
                             reader.readAsDataURL(file);
                         } else {
                             // שליחה של טקסט בלבד
-                            const response = await sendTextMessage(chatId, message);
+                            const response = await sendTextMessage(groupId, message);
                             console.log(response);
                         }
                     } catch (error) {
-                        console.error('Error sending message to group:', chatId, error);
+                        console.error('Error sending message to group:', groupName, error);
                     }
                 }
 
