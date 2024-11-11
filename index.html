@@ -66,8 +66,9 @@
                     const text = await response.text();
                     const data = JSON.parse(text.substr(47).slice(0, -2));
                     
-                    data.table.rows.forEach(row => {
+                    data.table.rows.forEach((row, index) => {
                         const groupName = row.c[1]?.v ? String(row.c[1].v).trim() : '';  // עמודה B - שם הקבוצה
+                        console.log(`Row ${index + 1}: Group Name - ${groupName}`); // הוספת לוג להצגת שם קבוצה בכל שורה
                         if (groupName) {
                             groups.push(groupName);
                         }
