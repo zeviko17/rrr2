@@ -123,7 +123,7 @@
 
             // פונקציונליות לכפתור השליחה
             const sendBtn = document.getElementById('send-btn');
-            sendBtn.addEventListener('click', function() {
+            sendBtn.addEventListener('click', async function() {
                 const selectedGroups = [];
                 document.querySelectorAll('.group-checkbox:checked').forEach(checkbox => {
                     selectedGroups.push(groups[checkbox.value]);
@@ -142,13 +142,74 @@
                     return;
                 }
 
-                // כאן ניתן להוסיף את הלוגיקה לשליחת ההודעה דרך ה-API של Green API
-                console.log('Sending message to groups:', selectedGroups);
-                console.log('Message content:', message);
-                console.log('Files:', files);
+                // שליחת הודעה לקבוצות שנבחרו
+                for (let chatId of selectedGroups) {
+                    try {
+                        if (files.length > 0) {
+                            // שליחה עם קובץ
+                            const file = files[0]; // נשלח רק את הקובץ הראשון כרגע
+                            const reader = new FileReader();
+                            reader.onload = async function(e) {
+                                const fileUrl = e.target.result;
+                                const response = await sendMessageWithImage(chatId, message, fileUrl);
+                                console.log(response);
+                            };
+                            reader.readAsDataURL(file);
+                        } else {
+                            // שליחה של טקסט בלבד
+                            const response = await sendTextMessage(chatId, message);
+                            console.log(response);
+                        }
+                    } catch (error) {
+                        console.error('Error sending message to group:', chatId, error);
+                    }
+                }
 
-                alert('ההודעה נשלחה לקבוצות שנבחרו (לא באמת, זה רק סימולציה לצורך הדגמה).');
+                alert('ההודעה נשלחה לקבוצות שנבחרו (בפועל).');
             });
+
+            // פונקציות לשליחת הודעות באמצעות Green API
+            async function sendTextMessage(chatId, messageText) {
+                const sendMessageUrl = CONFIG.SEND_MESSAGE_URL;
+
+                const payload = {
+                    "chatId": chatId,
+                    "message": messageText
+                };
+
+                const options = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                };
+
+                const response = await fetch(sendMessageUrl, options);
+                return await response.json();
+            }
+
+            async function sendMessageWithImage(chatId, messageText, imageUrl) {
+                const sendFileUrl = CONFIG.SEND_FILE_URL;
+
+                const payload = {
+                    "chatId": chatId,
+                    "urlFile": imageUrl,
+                    "fileName": "image.jpg",
+                    "caption": messageText
+                };
+
+                const options = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                };
+
+                const response = await fetch(sendFileUrl, options);
+                return await response.json();
+            }
 
             // טעינת הקבוצות בעת טעינת הדף
             loadGroups();
