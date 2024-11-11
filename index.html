@@ -67,7 +67,19 @@
                     const data = JSON.parse(text.substr(47).slice(0, -2));
                     
                     data.table.rows.forEach((row, index) => {
-                        const groupName = row.c[1]?.v ? String(row.c[1].v).trim() : '';  // עמודה B - שם הקבוצה
+                        const cell = row.c[1]; // עמודה B
+                        let groupName = '';
+
+                        if (cell) {
+                            if (cell.v !== null && cell.v !== undefined) {
+                                groupName = String(cell.v).trim();
+                            } else if (cell.f !== null && cell.f !== undefined) {
+                                groupName = String(cell.f).trim();
+                            } else if (cell.p !== null && cell.p !== undefined) {
+                                groupName = String(cell.p).trim();
+                            }
+                        }
+
                         console.log(`Row ${index + 1}: Group Name - ${groupName}`); // הוספת לוג להצגת שם קבוצה בכל שורה
                         if (groupName) {
                             groups.push(groupName);
