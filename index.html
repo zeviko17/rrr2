@@ -145,7 +145,7 @@
                 // שליחת הודעה לקבוצות שנבחרו
                 for (let groupName of selectedGroups) {
                     try {
-                        const groupId = groups[groupName];
+                        const groupId = groupName; // השתמש בשם הקבוצה כ-ID בשליחה
                         if (files.length > 0) {
                             // שליחה עם קובץ
                             const file = files[0]; // נשלח רק את הקובץ הראשון כרגע
