@@ -11,11 +11,25 @@ document.addEventListener("DOMContentLoaded", function() {
             const text = await response.text();
             const data = JSON.parse(text.substr(47).slice(0, -2));
             
-            data.table.rows.forEach(row => {
-                const groupName = row.c[1]?.v;  // עמודה B - שם הקבוצה
-                const groupId = row.c[3]?.v;    // עמודה D - ID של הקבוצה
-                if (groupName && groupId) {
-                    groups[groupName] = groupId;
+            data.table.rows.forEach((row, index) => {
+                console.log(`Row ${index + 1}:`, row); // הדפסת שורה ללוג
+
+                const cell = row.c[1]; // עמודה B - שם הקבוצה
+                let groupName = '';
+
+                if (cell) {
+                    if (cell.v !== null && cell.v !== undefined) {
+                        groupName = String(cell.v).trim();
+                    } else if (cell.f !== null && cell.f !== undefined) {
+                        groupName = String(cell.f).trim();
+                    } else if (cell.p !== null && cell.p !== undefined) {
+                        groupName = String(cell.p).trim();
+                    }
+                }
+
+                console.log(`Row ${index + 1}: Group Name - ${groupName}`); // הוספת לוג להצגת שם קבוצה בכל שורה
+                if (groupName) {
+                    groups[groupName] = row.c[3]?.v || ''; // שמירת שם הקבוצה וה-ID שלה
                 }
             });
 
@@ -31,8 +45,20 @@ document.addEventListener("DOMContentLoaded", function() {
         groupList.innerHTML = '';
 
         Object.keys(groups).forEach(name => {
+            // יצירת תיבת סימון לכל קבוצה
             const li = document.createElement('li');
-            li.textContent = `${name} (ID: ${groups[name]})`;
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'group-checkbox';
+            checkbox.value = name;
+            checkbox.id = `group-${name}`;
+
+            const label = document.createElement('label');
+            label.htmlFor = `group-${name}`;
+            label.textContent = ` ${name}`;
+
+            li.appendChild(checkbox);
+            li.appendChild(label);
             groupList.appendChild(li);
         });
     }
