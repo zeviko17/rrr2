@@ -67,8 +67,8 @@
                     const data = JSON.parse(text.substr(47).slice(0, -2));
                     
                     data.table.rows.forEach(row => {
-                        const groupName = row.c[1]?.v;  // עמודה B - שם הקבוצה
-                        const groupId = row.c[3]?.v;    // עמודה D - ID של הקבוצה
+                        const groupName = row.c[1]?.v?.trim();  // עמודה B - שם הקבוצה
+                        const groupId = row.c[3]?.v?.trim();    // עמודה D - ID של הקבוצה
                         if (groupName && groupId) {
                             groups[groupName] = groupId;
                         }
@@ -96,7 +96,7 @@
 
                     const label = document.createElement('label');
                     label.htmlFor = `group-${groups[name]}`;
-                    label.textContent = ` ${name} (ID: ${groups[name]})`;
+                    label.textContent = ` ${name}`;
 
                     li.appendChild(checkbox);
                     li.appendChild(label);
