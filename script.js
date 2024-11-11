@@ -6,9 +6,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // בקשה לנתונים מגוגל שיטס
     fetch(sheetUrl)
-        .then(response => response.json())
+        .then(response => {
+            console.log("Response received:", response);
+            return response.json();
+        })
         .then(data => {
+            console.log("Data received:", data);
             const entries = data.feed.entry;
+            if (!entries) {
+                console.error("No entries found in Google Sheets data.");
+                return;
+            }
+
             const groupList = document.getElementById("group-list");
 
             // עיבוד הנתונים מהגיליון
