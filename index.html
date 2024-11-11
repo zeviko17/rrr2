@@ -4,15 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>שליחת הודעות ווצאפ לקבוצות</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.2rem;
+        }
+    </style>
 </head>
 <body>
-    <h1>שליחת הודעות ווצאפ לקבוצות</h1>
-    <button id="select-all-btn">בחר הכל</button>
-    <ul id="group-list">
-        <!-- כאן יוצגו שמות הקבוצות -->
-    </ul>
+    <div class="container">
+        <h1 class="text-center mb-4">שליחת הודעות ווצאפ לקבוצות</h1>
+        
+        <div class="mb-3">
+            <button id="select-all-btn" class="btn btn-outline-primary">בחר הכל</button>
+        </div>
 
-    <!-- כאן תתווסף תיבת טקסט להודעה וכפתור שליחה בהמשך -->
+        <ul id="group-list" class="list-unstyled mb-4">
+            <!-- כאן יוצגו שמות הקבוצות -->
+        </ul>
+
+        <div class="mb-3">
+            <label for="message" class="form-label">תוכן ההודעה</label>
+            <textarea id="message" class="form-control" rows="5" placeholder="הקלד את תוכן ההודעה..."></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="file-upload" class="form-label">העלאת קבצים</label>
+            <input type="file" id="file-upload" class="form-control" multiple>
+        </div>
+
+        <button id="send-btn" class="btn btn-primary">שלח הודעה לקבוצות שנבחרו</button>
+    </div>
 
     <script src="config.js"></script>
     <script>
@@ -55,9 +92,14 @@
                     checkbox.type = 'checkbox';
                     checkbox.className = 'group-checkbox';
                     checkbox.value = name;
+                    checkbox.id = `group-${groups[name]}`;
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `group-${groups[name]}`;
+                    label.textContent = ` ${name} (ID: ${groups[name]})`;
 
                     li.appendChild(checkbox);
-                    li.appendChild(document.createTextNode(` ${name} (ID: ${groups[name]})`));
+                    li.appendChild(label);
                     groupList.appendChild(li);
                 });
             }
@@ -77,6 +119,35 @@
                     toggleSelectAll(false);
                     selectAllBtn.textContent = 'בחר הכל';
                 }
+            });
+
+            // פונקציונליות לכפתור השליחה
+            const sendBtn = document.getElementById('send-btn');
+            sendBtn.addEventListener('click', function() {
+                const selectedGroups = [];
+                document.querySelectorAll('.group-checkbox:checked').forEach(checkbox => {
+                    selectedGroups.push(groups[checkbox.value]);
+                });
+
+                const message = document.getElementById('message').value;
+                const files = document.getElementById('file-upload').files;
+
+                if (selectedGroups.length === 0) {
+                    alert('אנא בחר לפחות קבוצה אחת לשליחה.');
+                    return;
+                }
+
+                if (!message) {
+                    alert('אנא הקלד את תוכן ההודעה.');
+                    return;
+                }
+
+                // כאן ניתן להוסיף את הלוגיקה לשליחת ההודעה דרך ה-API של Green API
+                console.log('Sending message to groups:', selectedGroups);
+                console.log('Message content:', message);
+                console.log('Files:', files);
+
+                alert('ההודעה נשלחה לקבוצות שנבחרו (לא באמת, זה רק סימולציה לצורך הדגמה).');
             });
 
             // טעינת הקבוצות בעת טעינת הדף
