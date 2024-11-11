@@ -1,40 +1,42 @@
 document.addEventListener("DOMContentLoaded", function() {
     console.log("JavaScript file is connected successfully!");
 
-    // URL ל-JSON של Google Sheets שלך
-    const sheetUrl = "https://spreadsheets.google.com/feeds/cells/10IkkOpeD_VoDpqMN23QFxGyuW0_p0TZx4NpWNcMN-Ss/1/public/full?alt=json";
+    let groups = {}; // משתנה לאחסון שמות קבוצות וה-IDs שלהן
 
-    // בקשה לנתונים מגוגל שיטס
-    fetch(sheetUrl)
-        .then(response => {
-            console.log("Response received:", response);
-            return response.json();
-        })
-        .then(data => {
-            console.log("Data received:", data);
-            const entries = data.feed.entry;
-            if (!entries) {
-                console.error("No entries found in Google Sheets data.");
-                return;
-            }
+    async function loadGroups() {
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:json&sheet=${CONFIG.SHEET_NAME}`;
 
-            const groupList = document.getElementById("group-list");
-
-            // עיבוד הנתונים מהגיליון
-            for (let i = 0; i < entries.length; i++) {
-                const entry = entries[i];
-                const row = entry.gs$cell.row;
-                const col = entry.gs$cell.col;
-
-                if (col == "2" && row != "1") { // עמודה B, דילוג על כותרת
-                    const groupName = entry.content.$t;
-
-                    // הוספת שם הקבוצה לרשימה בדף
-                    const li = document.createElement("li");
-                    li.textContent = groupName;
-                    groupList.appendChild(li);
+        try {
+            const response = await fetch(SHEET_URL);
+            const text = await response.text();
+            const data = JSON.parse(text.substr(47).slice(0, -2));
+            
+            data.table.rows.forEach(row => {
+                const groupName = row.c[1]?.v;  // עמודה B - שם הקבוצה
+                const groupId = row.c[3]?.v;    // עמודה D - ID של הקבוצה
+                if (groupName && groupId) {
+                    groups[groupName] = groupId;
                 }
-            }
-        })
-        .catch(error => console.error("Error fetching Google Sheet data: ", error));
+            });
+
+            console.log('Groups loaded:', Object.keys(groups).length);
+            displayGroups();
+        } catch (error) {
+            console.error('Error loading data:', error);
+        }
+    }
+
+    function displayGroups() {
+        const groupList = document.getElementById("group-list");
+        groupList.innerHTML = '';
+
+        Object.keys(groups).forEach(name => {
+            const li = document.createElement('li');
+            li.textContent = `${name} (ID: ${groups[name]})`;
+            groupList.appendChild(li);
+        });
+    }
+
+    // טעינת הקבוצות בעת טעינת הדף
+    loadGroups();
 });
